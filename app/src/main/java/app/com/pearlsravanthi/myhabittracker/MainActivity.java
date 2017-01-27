@@ -1,5 +1,6 @@
 package app.com.pearlsravanthi.myhabittracker;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import android.widget.ListView;
 import java.util.ArrayList;
 import java.util.List;
 
+import app.com.pearlsravanthi.myhabittracker.db.HabitContract;
 import app.com.pearlsravanthi.myhabittracker.db.HabitDbHelper;
 
 public class MainActivity extends AppCompatActivity {
@@ -44,12 +46,24 @@ public class MainActivity extends AppCompatActivity {
         submitBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                System.out.print("Click");
+                
                 //reading habit
                 try {
                     habitList.clear();
-                    habitList.addAll(mHelper.read());
-                    System.out.print(habitList);
+
+                    Cursor c = mHelper.read();
+
+                    int habitIndex = c.getColumnIndex(HabitContract.HabitEntry.COL_TASK_HABIT_NAME);
+                    int frequencyIndex = c.getColumnIndex(HabitContract.HabitEntry.COL_TASK_HABIT_FREQ);
+
+                    if (c != null && c.moveToFirst()){
+                        do {
+                            String habit = c.getString(habitIndex) + " : " + Integer.toString(c.getInt(frequencyIndex));
+                            habitList.add(habit);
+                        } while(c.moveToNext());
+                    }
+                    c.close();
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -6,8 +6,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import app.com.pearlsravanthi.myhabittracker.db.HabitContract.HabitEntry;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static app.com.pearlsravanthi.myhabittracker.db.HabitContract.HabitEntry.COL_TASK_HABIT_FREQ;
 
 /**
  * Created by sravanthi
@@ -20,7 +24,7 @@ public class HabitDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String createTable = "CREATE TABLE IF NOT EXISTS " + HabitContract.HabitEntry.TABLE + " (" + HabitContract.HabitEntry.COL_TASK_HABIT_NAME + " VARCHAR, " +                  HabitContract.HabitEntry.COL_TASK_HABIT_FREQ + " INT(3))";
+        String createTable = "CREATE TABLE IF NOT EXISTS " + HabitContract.HabitEntry.TABLE + " (" + HabitContract.HabitEntry.COL_TASK_HABIT_NAME + " VARCHAR, " + COL_TASK_HABIT_FREQ + " INT(3))";
         db.execSQL(createTable);
     }
 
@@ -30,7 +34,7 @@ public class HabitDbHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void deleteDatabase(){
+    public void deleteDatabase() {
         this.deleteHabitsDB();
     }
 
@@ -41,7 +45,7 @@ public class HabitDbHelper extends SQLiteOpenHelper {
         db.execSQL(deleteScript);
     }
 
-    public void insert(String habitName){
+    public void insert(String habitName) {
 
         int defaultFreq = 0;
 
@@ -49,7 +53,7 @@ public class HabitDbHelper extends SQLiteOpenHelper {
 
         ContentValues values = new ContentValues();
         values.put(HabitContract.HabitEntry.COL_TASK_HABIT_NAME, habitName);
-        values.put(HabitContract.HabitEntry.COL_TASK_HABIT_FREQ, defaultFreq);
+        values.put(COL_TASK_HABIT_FREQ, defaultFreq);
 
         db.insertWithOnConflict(HabitContract.HabitEntry.TABLE,
                 null,
@@ -60,64 +64,52 @@ public class HabitDbHelper extends SQLiteOpenHelper {
 
     }
 
-    public void update(String habitName){
+    public void update(String habitName) {
 
         SQLiteDatabase db = this.getWritableDatabase();
 
-        Cursor c = db.rawQuery("SELECT * FROM habits WHERE habit = " + "'" + habitName + "'" , null);
+        Cursor c = db.rawQuery("SELECT * FROM habits WHERE habit = " + "'" + habitName + "'", null);
 
         try {
             int habitIndex = c.getColumnIndex(HabitContract.HabitEntry.COL_TASK_HABIT_NAME);
-            int frequencyIndex = c.getColumnIndex(HabitContract.HabitEntry.COL_TASK_HABIT_FREQ);
+            int frequencyIndex = c.getColumnIndex(COL_TASK_HABIT_FREQ);
 
 
-            if(c != null && c.moveToFirst()){
-                do{
+            if (c != null && c.moveToFirst()) {
+                do {
                     int updatedFreq = c.getInt(frequencyIndex) + 1;
                     ContentValues values = new ContentValues();
                     values.put(HabitContract.HabitEntry.COL_TASK_HABIT_NAME, c.getString(habitIndex));
-                    values.put(HabitContract.HabitEntry.COL_TASK_HABIT_FREQ, updatedFreq);
+                    values.put(COL_TASK_HABIT_FREQ, updatedFreq);
 
 
                     db.update(HabitContract.HabitEntry.TABLE, values, HabitContract.HabitEntry.COL_TASK_HABIT_NAME + " = ?",
-                            new String[] { String.valueOf(c.getString(habitIndex)) });
+                            new String[]{String.valueOf(c.getString(habitIndex))});
 
 
-                } while(c.moveToNext());
-            }
-
-            c.close();
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public ArrayList read(){
-        ArrayList habitList = new ArrayList();
-        try {
-
-            SQLiteDatabase db = this.getWritableDatabase();
-
-            String queryString = "SELECT * FROM habits";
-
-            Cursor c = db.rawQuery(queryString, null);
-
-            int habitIndex = c.getColumnIndex(HabitContract.HabitEntry.COL_TASK_HABIT_NAME);
-            int frequencyIndex = c.getColumnIndex(HabitContract.HabitEntry.COL_TASK_HABIT_FREQ);
-
-            if (c != null && c.moveToFirst()){
-                do {
-                    String habit = c.getString(habitIndex) + " : " + Integer.toString(c.getInt(frequencyIndex));
-
-                    habitList.add(habit);
-                } while(c.moveToNext());
+                } while (c.moveToNext());
             }
 
             c.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return habitList;
+    }
+
+    public Cursor read() {
+
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String queryString = "SELECT * FROM habits";
+
+        String[] columns = new String[2];
+        columns[0] = HabitEntry.COL_TASK_HABIT_NAME;
+        columns[1] = HabitEntry.COL_TASK_HABIT_FREQ;
+        Cursor c = db.query(HabitContract.HabitEntry.TABLE, columns, null, null,
+                null, null, null);
+        return c;
+
     }
 
 }
